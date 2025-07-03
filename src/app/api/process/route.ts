@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
 
   try {
     const rawBody = await request.json();
-    console.log('Raw body received:', rawBody);
 
     let body;
 
@@ -22,23 +21,24 @@ export async function POST(request: NextRequest) {
 
     exportId = body.exportId;
 
-    console.log('Parsed body object:', body);
-    console.log('Extracted exportId:', exportId);
-
     if (typeof exportId !== 'number' || isNaN(exportId)) {
       console.error('Invalid or missing exportId in request body after parsing:', exportId);
       return NextResponse.json({ error: 'Missing or invalid exportId' }, { status: 400 });
     }
 
     const processingRsp = await db.update(pdfExports).set({ status: 'processing' }).where(eq(pdfExports.id, exportId));
-    console.log('Processing update response:', processingRsp);
+
+    if (processingRsp.rowCount === 0) {
+      console.error('No rows updated for processing status:', exportId);
+      return NextResponse.json({ error: 'Failed to update processing status' }, { status: 404 });
+    }
 
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const downloadToken = generateDownloadToken();
     const expiresAt = createExpiryDate();
 
-    const rsp = await db
+    const response = await db
       .update(pdfExports)
       .set({
         status: 'completed',
@@ -48,7 +48,10 @@ export async function POST(request: NextRequest) {
       })
       .where(eq(pdfExports.id, exportId));
 
-    console.log('Final update response:', rsp);
+    if (response.rowCount === 0) {
+      console.error('No rows updated for completed status:', exportId);
+      return NextResponse.json({ error: 'Failed to update completed status' }, { status: 404 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -22,7 +22,6 @@ const securityHeaders = [
   value: ContentSecurityPolicy.replace(/\s{2,}/g, " ").trim(),
 });*/
 
-
 const nextConfig: NextConfig = {
   async headers() {
     return [

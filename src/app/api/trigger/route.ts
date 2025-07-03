@@ -31,8 +31,6 @@ export async function POST() {
       }),
     });
 
-     console.log(response)
-
     if (!response) {
       throw new Error('Failed to queue job');
     }
