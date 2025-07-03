@@ -3,9 +3,12 @@ import { db } from "@/db"
 import { pdfExports } from "@/db/schema"
 import { eq, and } from "drizzle-orm"
 
-export async function GET(request: NextRequest, { params }: { params: { token: string } }) {
+type Params = Promise<{ token: string }>;
+
+export async function GET(request: NextRequest,  { params }: { params: Params }) {
+
   try {
-    const token = params.token
+    const { token } = await params;
     
     const [pdfExport] = await db
       .select()
